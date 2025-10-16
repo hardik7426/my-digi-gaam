@@ -251,6 +251,10 @@ $random_quote = $quotes[array_rand($quotes)]; // Select a random quote
                 <i class="fa-solid fa-file-alt"></i>
                 <span>જરૂરી દસ્તાવેજ</span>
             </a>
+            <a href="stationery_store.php" class="grid-item">
+                <i class="fa-solid fa-store"></i>
+                <span>ઓનલાઈન સ્ટેશનરી</span>
+            </a>
         </div>
     </main>
 
