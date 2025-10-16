@@ -16,8 +16,7 @@ function format_time_gujarati($time24) {
     if ($hour12 == 0) { $hour12 = 12; }
     return sprintf('%s %02d:%s', $period, $hour12, $minutes);
 }
-$buses = $conn->query("SELECT * FROM schedules WHERE type = 'બસ' ORDER BY arrival_time");
-$trains = $conn->query("SELECT * FROM schedules WHERE type = 'ટ્રેન' ORDER BY arrival_time");
+$schedules = $conn->query("SELECT * FROM schedules ORDER BY type, arrival_time");
 ?>
 <!DOCTYPE html>
 <html lang="gu">
@@ -39,32 +38,24 @@ $trains = $conn->query("SELECT * FROM schedules WHERE type = 'ટ્રેન' O
         .main-header i { margin-right: 12px; }
         .main-header a.back-link { color: var(--secondary-text); text-decoration: none; font-weight: 500; transition: all 0.3s ease; padding: 8px 15px; border-radius: 8px; border: 1px solid transparent; }
         .main-header a.back-link:hover { background-color: #f7fafc; color: var(--primary-text); border-color: #e2e8f0; }
-
         .content-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; width: 100%; }
-        
-        /* === NEW FILTER & SEARCH BAR STYLING === */
-        .controls-container {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(8px);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
+        .controls-container { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(8px); padding: 20px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); display: flex; flex-wrap: wrap; gap: 20px; }
         .search-wrapper { position: relative; flex-grow: 1; }
         #searchInput { width: 100%; padding: 12px 20px 12px 45px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 1rem; font-family: 'Noto Sans Gujarati', sans-serif; }
         .search-wrapper i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--secondary-text); }
         .filter-buttons { display: flex; gap: 10px; }
         .filter-btn { padding: 12px 20px; border: 1px solid #e2e8f0; background-color: white; border-radius: 8px; font-family: 'Noto Sans Gujarati', sans-serif; font-size: 1rem; font-weight: 500; cursor: pointer; transition: background-color 0.3s, color 0.3s; }
         .filter-btn.active { background-color: var(--accent-color-1); color: white; border-color: var(--accent-color-1); }
-
-        .schedule-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; }
-        .schedule-card { background: var(--card-bg); backdrop-filter: blur(8px); border-radius: 12px; padding: 20px 25px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid rgba(255, 255, 255, 0.3); transition: transform 0.3s ease; }
-        .schedule-card h3 { font-size: 1.15rem; font-weight: 700; color: var(--primary-text); margin-bottom: 15px; }
-        .time-info { display: flex; justify-content: space-between; align-items: center; font-size: 1rem; color: var(--secondary-text); }
+        .schedule-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; }
+        .schedule-card { background: var(--card-bg); backdrop-filter: blur(8px); border-radius: 12px; padding: 25px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid rgba(255, 255, 255, 0.3); transition: transform 0.3s ease; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .card-header h3 { font-size: 1.2rem; font-weight: 700; color: var(--primary-text); }
+        .card-header .type-badge { font-size: 0.9rem; font-weight: 600; padding: 5px 12px; border-radius: 20px; }
+        .type-badge.bus { background-color: #ebf8ff; color: #3182ce; }
+        .type-badge.train { background-color: #e6fffa; color: #2c7a7b; }
+        .route-info { display: flex; align-items: center; justify-content: space-between; font-size: 1.1rem; font-weight: 600; margin-bottom: 20px; }
+        .route-info .fa-long-arrow-alt-right { color: var(--secondary-text); margin: 0 10px; }
+        .time-info { display: flex; justify-content: space-between; align-items: center; font-size: 1rem; color: var(--secondary-text); border-top: 1px solid rgba(0,0,0,0.1); padding-top: 15px;}
         .time-info span { font-weight: 600; color: var(--primary-text); }
         .footer { background-color: #2d3748; color: #a0aec0; text-align: center; padding: 20px 0; margin-top: auto; font-size: 0.9rem; }
         .footer strong { color: #ffffff; font-weight: 500; }
@@ -75,13 +66,12 @@ $trains = $conn->query("SELECT * FROM schedules WHERE type = 'ટ્રેન' O
         <h1><i class="fa-solid fa-clock"></i> બસ અને ટ્રેનનું સમયપત્રક</h1>
         <a href="index.php" class="back-link"><i class="fa-solid fa-arrow-left"></i> ડેશબોર્ડ પર પાછા જાઓ</a>
     </header>
-
     <main>
         <div class="content-container">
             <div class="controls-container">
                 <div class="search-wrapper">
                     <i class="fa-solid fa-search"></i>
-                    <input type="text" id="searchInput" placeholder="નામ દ્વારા શોધો...">
+                    <input type="text" id="searchInput" placeholder="સ્થળ (From/To) દ્વારા શોધો...">
                 </div>
                 <div class="filter-buttons">
                     <button class="filter-btn active" data-filter="all">બધા</button>
@@ -89,36 +79,31 @@ $trains = $conn->query("SELECT * FROM schedules WHERE type = 'ટ્રેન' O
                     <button class="filter-btn" data-filter="ટ્રેન">ટ્રેન</button>
                 </div>
             </div>
-
             <div class="schedule-grid">
-                <?php while($bus = $buses->fetch_assoc()): ?>
-                <div class="schedule-card" data-type="બસ" data-name="<?php echo htmlspecialchars($bus['name']); ?>">
-                    <h3><?php echo htmlspecialchars($bus['name']); ?></h3>
-                    <div class="time-info">
-                        <p>આવવાનો સમય: <span><?php echo format_time_gujarati($bus['arrival_time']); ?></span></p>
-                        <p>ઉપડવાનો સમય: <span><?php echo format_time_gujarati($bus['departure_time']); ?></span></p>
+                <?php while($row = $schedules->fetch_assoc()): ?>
+                <div class="schedule-card" data-type="<?php echo htmlspecialchars($row['type']); ?>" data-from="<?php echo htmlspecialchars(strtolower($row['route_from'])); ?>" data-to="<?php echo htmlspecialchars(strtolower($row['route_to'])); ?>">
+                    <div class="card-header">
+                        <h3><?php echo htmlspecialchars($row['name']); ?></h3>
+                        <span class="type-badge <?php echo ($row['type'] === 'બસ') ? 'bus' : 'train'; ?>"><?php echo htmlspecialchars($row['type']); ?></span>
                     </div>
-                </div>
-                <?php endwhile; ?>
-                
-                <?php while($train = $trains->fetch_assoc()): ?>
-                <div class="schedule-card" data-type="ટ્રેન" data-name="<?php echo htmlspecialchars($train['name']); ?>">
-                    <h3><?php echo htmlspecialchars($train['name']); ?></h3>
+                    <div class="route-info">
+                        <span><?php echo htmlspecialchars($row['route_from']); ?></span>
+                        <i class="fas fa-long-arrow-alt-right"></i>
+                        <span><?php echo htmlspecialchars($row['route_to']); ?></span>
+                    </div>
                     <div class="time-info">
-                        <p>આવવાનો સમય: <span><?php echo format_time_gujarati($train['arrival_time']); ?></span></p>
-                        <p>ઉપડવાનો સમય: <span><?php echo format_time_gujarati($train['departure_time']); ?></span></p>
+                        <p>આવવાનો સમય: <span><?php echo format_time_gujarati($row['arrival_time']); ?></span></p>
+                        <p>ઉપડવાનો સમય: <span><?php echo format_time_gujarati($row['departure_time']); ?></span></p>
                     </div>
                 </div>
                 <?php endwhile; ?>
             </div>
         </div>
     </main>
-    
     <footer class="footer">
         © ૨૦૨૫ માય ડિજી ગામ | All Rights Reserved.<br>
         Developed by <strong>[Your Name Here]</strong>
     </footer>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('searchInput');
@@ -131,10 +116,11 @@ $trains = $conn->query("SELECT * FROM schedules WHERE type = 'ટ્રેન' O
 
                 scheduleCards.forEach(card => {
                     const type = card.dataset.type;
-                    const name = card.dataset.name.toLowerCase();
+                    const from = card.dataset.from;
+                    const to = card.dataset.to;
 
                     const typeMatch = (activeFilter === 'all') || (type === activeFilter);
-                    const searchMatch = name.includes(searchTerm);
+                    const searchMatch = from.includes(searchTerm) || to.includes(searchTerm);
 
                     if (typeMatch && searchMatch) {
                         card.style.display = 'block';
@@ -143,9 +129,7 @@ $trains = $conn->query("SELECT * FROM schedules WHERE type = 'ટ્રેન' O
                     }
                 });
             }
-
             searchInput.addEventListener('keyup', filterAndSearch);
-
             filterButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     filterButtons.forEach(btn => btn.classList.remove('active'));

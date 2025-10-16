@@ -4,24 +4,16 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header('Location: ../login.php');
     exit();
 }
-
-// === નવું ટાઇમ ફોર્મેટિંગ ફંક્શન ===
 function format_time_gujarati($time24) {
     if (empty($time24)) return '';
-    list($hour, $minutes) = explode(':', $time24);
-    $hour = (int)$hour;
-
-    // સમય પ્રમાણે ગુજરાતી શબ્દ નક્કી કરો
+    list($hour, $minutes) = explode(':', $time24); $hour = (int)$hour;
     $period = '';
     if ($hour >= 21 || $hour < 4) { $period = 'રાત્રે'; }
     elseif ($hour >= 17) { $period = 'સાંજે'; }
     elseif ($hour >= 12) { $period = 'બપોરે'; }
     else { $period = 'સવારે'; }
-
-    // 12-કલાકના ફોર્મેટમાં ફેરવો
     $hour12 = $hour % 12;
     if ($hour12 == 0) { $hour12 = 12; }
-
     return sprintf('%s %02d:%s', $period, $hour12, $minutes);
 }
 
@@ -31,16 +23,18 @@ if (isset($_POST['save'])) {
     $id = $_POST['id'];
     $type = $_POST['type'];
     $name = $_POST['name'];
+    $route_from = $_POST['route_from']; // New field
+    $route_to = $_POST['route_to'];     // New field
     $arrival_time = $_POST['arrival_time'];
     $departure_time = $_POST['departure_time'];
 
     if (empty($id)) {
-        $stmt = $conn->prepare("INSERT INTO schedules (type, name, arrival_time, departure_time) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $type, $name, $arrival_time, $departure_time);
+        $stmt = $conn->prepare("INSERT INTO schedules (type, name, route_from, route_to, arrival_time, departure_time) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssss", $type, $name, $route_from, $route_to, $arrival_time, $departure_time);
         if ($stmt->execute()) $message = "નવો રેકોર્ડ ઉમેરાયો.";
     } else {
-        $stmt = $conn->prepare("UPDATE schedules SET type=?, name=?, arrival_time=?, departure_time=? WHERE id=?");
-        $stmt->bind_param("ssssi", $type, $name, $arrival_time, $departure_time, $id);
+        $stmt = $conn->prepare("UPDATE schedules SET type=?, name=?, route_from=?, route_to=?, arrival_time=?, departure_time=? WHERE id=?");
+        $stmt->bind_param("ssssssi", $type, $name, $route_from, $route_to, $arrival_time, $departure_time, $id);
         if ($stmt->execute()) $message = "રેકોર્ડ અપડેટ થયો.";
     }
     $stmt->close();
@@ -54,13 +48,12 @@ if (isset($_GET['delete'])) {
     $stmt->close();
 }
 // Fetch data for editing
-$edit_schedule = ['id' => '', 'type' => '', 'name' => '', 'arrival_time' => '', 'departure_time' => ''];
+$edit_schedule = ['id' => '', 'type' => '', 'name' => '', 'route_from' => '', 'route_to' => '', 'arrival_time' => '', 'departure_time' => ''];
 if (isset($_GET['edit'])) {
     $id = $_GET['edit'];
     $result = $conn->query("SELECT * FROM schedules WHERE id = $id");
     $edit_schedule = $result->fetch_assoc();
 }
-// Fetch all data
 $schedules = $conn->query("SELECT * FROM schedules ORDER BY type, arrival_time");
 ?>
 <!DOCTYPE html>
@@ -69,12 +62,10 @@ $schedules = $conn->query("SELECT * FROM schedules ORDER BY type, arrival_time")
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>સમયપત્રક મેનેજ કરો - એડમિન પેનલ</title>
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    
     <style>
         :root { --header-bg: rgba(255, 255, 255, 0.8); --card-bg: rgba(255, 255, 255, 0.7); --primary-text: #1a202c; --secondary-text: #4a5568; --accent-color-1: #3182ce; --danger-color: #e53e3e; --shadow-color: rgba(0, 0, 0, 0.1); }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -115,16 +106,21 @@ $schedules = $conn->query("SELECT * FROM schedules ORDER BY type, arrival_time")
             <div class="form-section">
                 <h3><?php echo empty($edit_schedule['id']) ? 'નવું સમયપત્રક ઉમેરો' : 'સમયપત્રક એડિટ કરો'; ?></h3>
                 <form action="manage_schedules.php" method="post">
-                    <input type="hidden" name="id" value="<?php echo $edit_schedule['id']; ?>">
+                    <input type="hidden" name="id" value="<?php echo htmlspecialchars($edit_schedule['id']); ?>">
                     <select name="type" required>
                         <option value="બસ" <?php if($edit_schedule['type'] == 'બસ') echo 'selected'; ?>>બસ</option>
                         <option value="ટ્રેન" <?php if($edit_schedule['type'] == 'ટ્રેન') echo 'selected'; ?>>ટ્રેન</option>
                     </select>
-                    <input type="text" name="name" placeholder="નામ (દા.ત. બાબરા - વેરાવળ)" value="<?php echo htmlspecialchars($edit_schedule['name']); ?>" required>
+                    <input type="text" name="name" placeholder="નામ (દા.ત. એક્સપ્રેસ)" value="<?php echo htmlspecialchars($edit_schedule['name']); ?>" required>
+                    <input type="text" name="route_from" placeholder="ક્યાંથી (From)" value="<?php echo htmlspecialchars($edit_schedule['route_from']); ?>" required>
+                    <input type="text" name="route_to" placeholder="ક્યાં સુધી (To)" value="<?php echo htmlspecialchars($edit_schedule['route_to']); ?>" required>
+                    
                     <label for="arrival_time">આવવાનો સમય (24-કલાક ફોર્મેટ)</label>
                     <input type="time" id="arrival_time" name="arrival_time" value="<?php echo htmlspecialchars($edit_schedule['arrival_time']); ?>" required>
+                    
                     <label for="departure_time">ઉપડવાનો સમય (24-કલાક ફોર્મેટ)</label>
                     <input type="time" id="departure_time" name="departure_time" value="<?php echo htmlspecialchars($edit_schedule['departure_time']); ?>" required>
+                    
                     <button type="submit" name="save">સેવ કરો</button>
                 </form>
                 <?php if ($message) echo "<p class='message success'>$message</p>"; ?>
@@ -134,13 +130,13 @@ $schedules = $conn->query("SELECT * FROM schedules ORDER BY type, arrival_time")
                 <h3>હાલનું સમયપત્રક</h3>
                 <table>
                     <thead>
-                        <tr><th>પ્રકાર</th><th>નામ</th><th>આવવાનો સમય</th><th>ઉપડવાનો સમય</th><th>ક્રિયાઓ</th></tr>
+                        <tr><th>પ્રકાર</th><th>રૂટ</th><th>આવવાનો સમય</th><th>ઉપડવાનો સમય</th><th>ક્રિયાઓ</th></tr>
                     </thead>
                     <tbody>
                         <?php while($row = $schedules->fetch_assoc()): ?>
                         <tr>
-                            <td><?php echo $row['type']; ?></td>
-                            <td><?php echo htmlspecialchars($row['name']); ?></td>
+                            <td><?php echo htmlspecialchars($row['type']); ?></td>
+                            <td><strong><?php echo htmlspecialchars($row['route_from']); ?></strong> થી <strong><?php echo htmlspecialchars($row['route_to']); ?></strong></td>
                             <td><?php echo format_time_gujarati($row['arrival_time']); ?></td>
                             <td><?php echo format_time_gujarati($row['departure_time']); ?></td>
                             <td>
