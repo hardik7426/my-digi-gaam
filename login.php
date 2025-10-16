@@ -1,16 +1,21 @@
 <?php
+session_start();
 require 'db.php';
 $message = '';
 
+// Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty(trim($_POST['username'])) || empty(trim($_POST['password']))) {
         $message = "કૃપા કરીને વપરાશકર્તાનામ અને પાસવર્ડ દાખલ કરો.";
     } else {
-        $username = $_POST['username'];
-        $password = $_POST['password'];
+        $username = trim($_POST['username']);
+        $password = trim($_POST['password']);
 
+        // === Fixed Admin Credentials ===
         $fixed_admin_user = 'admin';
         $fixed_admin_pass = 'password123';
+
+        // === Admin Login Check ===
         if ($username === $fixed_admin_user && $password === $fixed_admin_pass) {
             $_SESSION['user_id'] = 0;
             $_SESSION['username'] = $fixed_admin_user;
@@ -18,25 +23,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             header("Location: admin/index.php");
             exit();
         } else {
-            $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE username = ?");
+            // === User Login Check ===
+            $stmt = $conn->prepare("SELECT id, username, password, role, is_verified FROM users WHERE username = ?");
             $stmt->bind_param("s", $username);
             $stmt->execute();
             $result = $stmt->get_result();
+
             if ($result->num_rows === 1) {
                 $user = $result->fetch_assoc();
+
                 if (password_verify($password, $user['password'])) {
-                    $_SESSION['user_id'] = $user['id'];
-                    $_SESSION['username'] = $user['username'];
-                    $_SESSION['role'] = $user['role'];
-                    header("Location: " . ($user['role'] == 'admin' ? 'admin/index.php' : 'index.php'));
-                    exit();
-                } else { $message = "તમે દાખલ કરેલો પાસવર્ડ ખોટો છે."; }
-            } else { $message = "આ નામનો કોઈ વપરાશકર્તા મળ્યો નથી."; }
+                    // === Account Verification Check ===
+                    if ($user['is_verified'] == 1) {
+                        $_SESSION['user_id'] = $user['id'];
+                        $_SESSION['username'] = $user['username'];
+                        $_SESSION['role'] = $user['role'];
+                        header("Location: " . ($user['role'] == 'admin' ? 'admin/index.php' : 'index.php'));
+                        exit();
+                    } else {
+                        $message = "તમારું એકાઉન્ટ વેરિફાઈ થયેલ નથી. કૃપા કરીને ફરીથી સાઇન અપ કરો.";
+                    }
+                } else {
+                    $message = "તમે દાખલ કરેલો પાસવર્ડ ખોટો છે.";
+                }
+            } else {
+                $message = "આ નામનો કોઈ વપરાશકર્તા મળ્યો નથી.";
+            }
             $stmt->close();
         }
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="gu">
 <head>
@@ -49,15 +67,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
         :root {
-            /* === ફક્ત અહીં ઇમેજનું નામ બદલો === */
             --bg-image-path: url('assets/images/index.jpeg');
-            
             --primary-color: #3182ce;
             --secondary-color: #38b2ac;
             --text-color: #1a202c;
             --light-text: #718096;
             --error-color: #c53030;
             --error-bg: #fed7d7;
+            --success-color: #2f855a;
+            --success-bg: #c6f6d5;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -68,8 +86,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             justify-content: center;
             min-height: 100vh;
             padding: 20px;
-            overflow: hidden; /* Prevents scrollbars from background animation */
+            overflow: hidden;
         }
+
         .background-overlay {
             position: fixed;
             top: -5%; left: -5%;
@@ -87,22 +106,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             padding: 40px;
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
             border-radius: 15px;
             border: 1px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 15px 40px rgba(0,0,0,0.2);
             animation: fadeIn 1s ease-out;
         }
+
         .auth-header { text-align: center; margin-bottom: 30px; }
         .auth-header h1 { font-size: 2.5rem; color: var(--text-color); font-weight: 700; }
         .auth-header i { color: var(--primary-color); }
         .auth-header p { color: var(--light-text); }
-        
+
         .input-group { position: relative; margin-bottom: 20px; }
         .input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--light-text); transition: color 0.3s; }
         .input-group input {
             width: 100%;
-            padding: 14px 14px 14px 45px; /* Space for icon */
+            padding: 14px 14px 14px 45px;
             border: 1px solid #cbd5e0;
             border-radius: 8px;
             font-size: 1rem;
@@ -135,12 +154,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         button.loading .button-text { visibility: hidden; }
         button.loading .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; position: absolute; top: 50%; left: 50%; margin-top: -10px; margin-left: -10px; }
 
+        .options { text-align: right; margin-top: -10px; margin-bottom: 20px; }
+        .forgot-link { font-size: 0.9rem; color: var(--light-text); text-decoration: none; }
+        .forgot-link:hover { color: var(--primary-color); }
+
         .auth-switch { text-align: center; margin-top: 20px; color: var(--light-text); }
         .auth-switch a { color: var(--primary-color); font-weight: 600; text-decoration: none; }
-        
-        .message.error { text-align: center; padding: 12px; margin-bottom: 20px; border-radius: 8px; font-weight: 500; color: var(--error-color); background-color: var(--error-bg); animation: shake 0.5s; }
-        
-        /* Animations */
+
+        .message {
+            text-align: center;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        .message.error { color: var(--error-color); background-color: var(--error-bg); animation: shake 0.5s; }
+        .message.success { color: var(--success-color); background-color: var(--success-bg); }
+
         @keyframes zoomAndPan { from { transform: scale(1); } to { transform: scale(1.1); } }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -159,11 +189,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <h1><i class="fa-solid fa-mobile-screen-button"></i> માય ડિજી ગામ</h1>
             <p>તમારું સ્વાગત છે!</p>
         </div>
-        
-        <?php if(!empty($message)): ?>
-            <p class="message error"><?php echo $message; ?></p>
-        <?php endif; ?>
-        
+
+        <?php
+        // ✅ Show success message from session
+        if (isset($_SESSION['success_message'])) {
+            echo '<p class="message success">' . $_SESSION['success_message'] . '</p>';
+            unset($_SESSION['success_message']);
+        }
+
+        // ❌ Show error message if exists
+        if (!empty($message)) {
+            echo '<p class="message error">' . $message . '</p>';
+        }
+        ?>
+
         <form id="loginForm" action="login.php" method="post">
             <div class="input-group">
                 <input type="text" name="username" placeholder="વપરાશકર્તાનામ" required>
@@ -172,6 +211,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="input-group">
                 <input type="password" name="password" placeholder="પાસવર્ડ" required>
                 <i class="fa-solid fa-lock"></i>
+            </div>
+            <div class="options">
+                <a href="forgot-password.php" class="forgot-link">પાસવર્ડ ભૂલી ગયા?</a>
             </div>
             <button type="submit">
                 <span class="button-text">લોગીન કરો</span>
@@ -182,19 +224,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
 
     <script>
-        // Button loading animation on form submit
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             const button = this.querySelector('button[type="submit"]');
-            
-            // Basic client-side validation
             const username = this.querySelector('input[name="username"]').value;
             const password = this.querySelector('input[name="password"]').value;
 
             if (username.trim() === '' || password.trim() === '') {
-                // If fields are empty, don't show loader, let HTML 'required' handle it
                 return;
             }
-
             button.classList.add('loading');
             button.disabled = true;
         });
