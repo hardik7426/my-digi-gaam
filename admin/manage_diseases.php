@@ -1,0 +1,110 @@
+<?php
+require '../db.php';
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    header('Location: ../login.php'); exit();
+}
+
+$message = '';
+// Add/Update Logic
+if (isset($_POST['save'])) {
+    $id = $_POST['id'];
+    $name = $_POST['name'];
+    if (empty($id)) {
+        $stmt = $conn->prepare("INSERT INTO diseases (name) VALUES (?)");
+        $stmt->bind_param("s", $name);
+        if ($stmt->execute()) $message = "નવો રોગ ઉમેરાયો.";
+    } else {
+        $stmt = $conn->prepare("UPDATE diseases SET name=? WHERE id=?");
+        $stmt->bind_param("si", $name, $id);
+        if ($stmt->execute()) $message = "રોગ અપડેટ થયો.";
+    }
+    $stmt->close();
+}
+// Delete Logic
+if (isset($_GET['delete'])) {
+    $id = $_GET['delete'];
+    $stmt = $conn->prepare("DELETE FROM diseases WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    if ($stmt->execute()) $message = "રોગ દૂર કરાયો.";
+    $stmt->close();
+}
+$edit_disease = ['id'=>'', 'name'=>''];
+if (isset($_GET['edit'])) {
+    $id = $_GET['edit'];
+    $result = $conn->query("SELECT * FROM diseases WHERE id = $id");
+    $edit_disease = $result->fetch_assoc();
+}
+$diseases = $conn->query("SELECT * FROM diseases ORDER BY name");
+?>
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>રોગ મેનેજ કરો - એડમિન પેનલ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        :root { --header-bg: rgba(255, 255, 255, 0.8); --card-bg: rgba(255, 255, 255, 0.7); --primary-text: #1a202c; --secondary-text: #4a5568; --accent-color-1: #3182ce; --danger-color: #e53e3e; --shadow-color: rgba(0, 0, 0, 0.1); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans Gujarati', sans-serif; color: var(--primary-text); background-image: linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)), url('../assets/images/index.jpeg'); background-attachment: fixed; min-height: 100vh; display: flex; flex-direction: column; }
+        main { flex-grow: 1; }
+        .main-header { background-color: var(--header-bg); backdrop-filter: blur(10px); padding: 1rem 2.5rem; box-shadow: 0 4px 6px -1px var(--shadow-color); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
+        .main-header h1 { font-size: 1.6rem; font-weight: 700; color: var(--primary-text); }
+        .main-header i { margin-right: 12px; color: var(--accent-color-1); }
+        .main-header a.back-link { color: var(--secondary-text); text-decoration: none; font-weight: 500; }
+        .admin-container { max-width: 1100px; margin: 40px auto; padding: 0 20px; width: 100%; }
+        .form-section, .table-section { background: var(--card-bg); backdrop-filter: blur(10px); border-radius: 12px; padding: 30px 40px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); border: 1px solid rgba(255, 255, 255, 0.5); margin-bottom: 30px; }
+        .form-section h3, .table-section h3 { margin-bottom: 20px; font-size: 1.4rem; }
+        input[type="text"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 1rem; }
+        button[type="submit"] { padding: 12px 30px; background-color: var(--accent-color-1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 15px; border-bottom: 1px solid rgba(0,0,0,0.05); text-align: left; }
+        td a { color: var(--accent-color-1); font-weight: 500; text-decoration: none; }
+        .delete-action { color: var(--danger-color); }
+        .message.success { color: #2f855a; background-color: #c6f6d5; padding: 15px; margin-top: 20px; border-radius: 8px; }
+        .footer { background-color: #2d3748; color: #a0aec0; text-align: center; padding: 20px 0; margin-top: auto; font-size: 0.9rem; }
+        .footer strong { color: #ffffff; }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <h1><i class="fa-solid fa-disease"></i> રોગોનું લિસ્ટ મેનેજ કરો</h1>
+        <a href="index.php" class="back-link"><i class="fa-solid fa-arrow-left"></i> એડમિન ડેશબોર્ડ</a>
+    </header>
+    <main>
+        <div class="admin-container">
+            <div class="form-section">
+                <h3><?php echo empty($edit_disease['id']) ? 'નવો રોગ ઉમેરો' : 'રોગ એડિટ કરો'; ?></h3>
+                <form action="manage_diseases.php" method="post">
+                    <input type="hidden" name="id" value="<?php echo htmlspecialchars($edit_disease['id']); ?>">
+                    <label for="name">રોગનું નામ (દા.ત. તાવ, શરદી)</label>
+                    <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($edit_disease['name']); ?>" required>
+                    <button type="submit" name="save">સેવ કરો</button>
+                </form>
+                <?php if ($message) echo "<p class='message success'>$message</p>"; ?>
+            </div>
+            <div class="table-section">
+                <h3>રોગોનું લિસ્ટ</h3>
+                <table>
+                    <thead><tr><th>નામ</th><th>ક્રિયાઓ</th></tr></thead>
+                    <tbody>
+                        <?php while($row = $diseases->fetch_assoc()): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($row['name']); ?></td>
+                            <td>
+                                <a href="manage_diseases.php?edit=<?php echo $row['id']; ?>">એડિટ</a> |
+                                <a href="manage_diseases.php?delete=<?php echo $row['id']; ?>" class="delete-action" onclick="return confirm('આ રોગ ડિલીટ કરવાથી તેની બધી દવાઓ પણ ડિલીટ થઈ જશે. શું તમે ચોક્કસ છો?');">ડિલીટ</a>
+                            </td>
+                        </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    <footer class="footer">...</footer>
+</body>
+</html>

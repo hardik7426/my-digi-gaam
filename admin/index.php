@@ -329,6 +329,22 @@ $grants_count = $conn->query("SELECT COUNT(*) as count FROM grants")->fetch_asso
                 <i class="fa-solid fa-pencil-ruler"></i>
                 <span>સ્ટેશનરી પ્રોડક્ટ્સ</span>
             </a>
+            <a href="manage_doctors.php" class="grid-item">
+                <i class="fa-solid fa-user-doctor"></i>
+                <span>ડોક્ટર મેનેજ કરો</span>
+            </a>
+            <a href="manage_medical_stores.php" class="grid-item">
+                <i class="fa-solid fa-pills"></i>
+                <span>મેડિકલ સ્ટોર</span>
+            </a>
+            <a href="manage_diseases.php" class="grid-item">
+                <i class="fa-solid fa-disease"></i>
+                <span>રોગ મેનેજ કરો</span>
+            </a>
+            <a href="manage_medicines.php" class="grid-item">
+                <i class="fa-solid fa-capsules"></i>
+                <span>દવાઓ મેનેજ કરો</span>
+            </a>
         </div>
     </main>
     <footer class="footer">
