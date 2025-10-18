@@ -196,14 +196,44 @@ $random_quote = $quotes[array_rand($quotes)]; // Select a random quote
             color: #ffffff;
             font-weight: 500;
         }
+
+        .messenger-link {
+            color: var(--accent-color-1);
+            text-decoration: none;
+            font-weight: 600;
+            position: relative;
+            margin-right: 15px;
+        }
+
+        .notification-dot {
+            background-color: #e53e3e;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            line-height: 20px;
+            font-size: 0.8rem;
+            text-align: center;
+            position: absolute;
+            top: -10px;
+            right: -15px;
+        }
     </style>
 </head>
 
 <body>
     <header class="main-header">
         <h1><i class="fa-solid fa-mobile-screen-button"></i> માય ડિજી ગામ</h1>
-        <span>સ્વાગત છે, <?php echo htmlspecialchars($_SESSION['username']); ?>! | <a href="logout.php"><i
-                    class="fa-solid fa-right-from-bracket"></i> લોગઆઉટ</a></span>
+        <span>
+            <a href="messenger.php" class="messenger-link">
+                <i class="fa-solid fa-bell"></i> મેસેન્જર
+                <?php if (isset($_SESSION['unread_messages']) && $_SESSION['unread_messages'] > 0): ?>
+                    <span class="notification-dot"><?php echo $_SESSION['unread_messages']; ?></span>
+                <?php endif; ?>
+            </a>
+            | સ્વાગત છે, <?php echo htmlspecialchars($_SESSION['username']); ?>! |
+            <a href="logout.php"><i class="fa-solid fa-right-from-bracket"></i> લોગઆઉટ</a>
+        </span>
     </header>
 
     <main>

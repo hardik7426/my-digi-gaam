@@ -345,6 +345,10 @@ $grants_count = $conn->query("SELECT COUNT(*) as count FROM grants")->fetch_asso
                 <i class="fa-solid fa-capsules"></i>
                 <span>દવાઓ મેનેજ કરો</span>
             </a>
+            <a href="manage_appointments.php" class="grid-item">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>એપોઇન્ટમેન્ટ્સ મેનેજ કરો</span>
+            </a>
         </div>
     </main>
     <footer class="footer">

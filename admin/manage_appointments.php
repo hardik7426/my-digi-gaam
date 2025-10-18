@@ -3,8 +3,6 @@ require '../db.php';
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header('Location: ../login.php'); exit();
 }
-
-// Fetch all appointments with doctor and user names
 $appointments = $conn->query("SELECT a.*, d.name as doctor_name, u.username as user_name 
     FROM appointments a 
     JOIN users u ON a.user_id = u.id 
@@ -72,6 +70,9 @@ $appointments = $conn->query("SELECT a.*, d.name as doctor_name, u.username as u
             </div>
         </div>
     </main>
-    <footer class="footer">...</footer>
+    <footer class="footer">
+        © ૨૦૨૫ માય ડિજી ગામ | All Rights Reserved.<br>
+        Developed by <strong>[Your Name Here]</strong>
+    </footer>
 </body>
 </html>

@@ -10,6 +10,7 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 $doctor_id = (int)$_GET['id'];
 $user_id = $_SESSION['user_id'];
 $message = '';
+$message_type = 'error';
 
 // Fetch doctor details to show
 $stmt = $conn->prepare("SELECT name, timings FROM doctors WHERE id = ?");
@@ -20,7 +21,6 @@ if (!$doctor) { die("Doctor not found."); }
 
 // Handle form submission
 if (isset($_POST['book'])) {
-    // Get all form data
     $patient_name = $_POST['patient_name'];
     $dob = $_POST['dob'];
     $location = $_POST['location'];
@@ -30,12 +30,12 @@ if (isset($_POST['book'])) {
     $problem_description = $_POST['problem_description'];
     $booking_date = $_POST['booking_date'];
 
-    // Insert into appointments
     $stmt = $conn->prepare("INSERT INTO appointments (user_id, doctor_id, patient_name, dob, location, gender, age, contact_number, problem_description, booking_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')");
     $stmt->bind_param("iissssisss", $user_id, $doctor_id, $patient_name, $dob, $location, $gender, $age, $contact_number, $problem_description, $booking_date);
     
     if ($stmt->execute()) {
-        $message = "તમારી એપોઇન્ટમેન્ટ રિક્વેસ્ટ મોકલી દેવામાં આવી છે. એડમિન ટૂંક સમયમાં મેસેન્જર ટેબમાં જવાબ આપશે.";
+        $message = "તમારી એપોઇન્ટમેન્ટ રિક્વેસ્ટ મોકલી દેવામાં આવી છે. એડમિન ટૂંક સમયમાં 'મેસેન્જર' ટેબમાં જવાબ આપશે.";
+        $message_type = 'success';
     } else {
         $message = "રિક્વેસ્ટ મોકલવામાં ભૂલ આવી.";
     }
@@ -68,9 +68,12 @@ if (isset($_POST['book'])) {
         label { display: block; font-weight: 500; margin-bottom: 8px; color: var(--secondary-text); }
         input, select, textarea { width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 1rem; }
         button[type="submit"] { width: 100%; padding: 15px; margin-top: 20px; background: linear-gradient(135deg, var(--accent-color-1), var(--accent-color-2)); color: white; border: none; border-radius: 8px; font-size: 1.2rem; font-weight: 600; cursor: pointer; }
-        .message.success { color: #2f855a; background-color: #c6f6d5; padding: 15px; margin-top: 20px; border-radius: 8px; }
+        .message { text-align: center; padding: 15px; margin-top: 20px; border-radius: 8px; font-weight: 500; }
+        .message.success { color: #2f855a; background-color: #c6f6d5; }
+        .message.error { color: #c53030; background-color: #fed7d7; }
         .footer { background-color: #2d3748; color: #a0aec0; text-align: center; padding: 20px 0; margin-top: auto; font-size: 0.9rem; }
         .footer strong { color: #ffffff; }
+        @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } .form-group.full-width { grid-column: span 1; } }
     </style>
 </head>
 <body>
@@ -84,7 +87,7 @@ if (isset($_POST['book'])) {
             <p style="color: var(--secondary-text); margin-bottom: 20px;">કૃપા કરીને નીચેનું ફોર્મ ભરો. એડમિન ટૂંક સમયમાં તમારો સંપર્ક કરશે.</p>
 
             <?php if (!empty($message)): ?>
-                <div class="message success"><?php echo $message; ?></div>
+                <div class="message <?php echo $message_type; ?>"><?php echo $message; ?></div>
             <?php else: ?>
             <form action="book_appointment.php?id=<?php echo $doctor_id; ?>" method="post">
                 <div class="form-grid">
@@ -126,7 +129,7 @@ if (isset($_POST['book'])) {
                     </div>
                     <div class="form-group full-width">
                         <label>ડોક્ટરનો ઉપલબ્ધ સમય</label>
-                        <input type="text" value="<?php echo htmlspecialchars($doctor['timings']); ?>" readonly>
+                        <input type="text" value="<?php echo htmlspecialchars($doctor['timings']); ?>" readonly style="background-color: #f7fafc;">
                     </div>
                 </div>
                 <button type="submit" name="book">રિક્વેસ્ટ મોકલો</button>
@@ -134,6 +137,9 @@ if (isset($_POST['book'])) {
             <?php endif; ?>
         </div>
     </main>
-    <footer class="footer">...</footer>
+    <footer class="footer">
+        © ૨૦૨૫ માય ડિજી ગામ | All Rights Reserved.<br>
+        Developed by <strong>[Your Name Here]</strong>
+    </footer>
 </body>
 </html>

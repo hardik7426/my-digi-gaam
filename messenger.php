@@ -8,6 +8,8 @@ $user_id = $_SESSION['user_id'];
 // "Delete All" Logic
 if (isset($_GET['delete_all'])) {
     $conn->query("DELETE FROM messenger WHERE user_id = $user_id");
+    // Also delete appointments
+    $conn->query("DELETE FROM appointments WHERE user_id = $user_id");
     header('Location: messenger.php');
     exit();
 }
@@ -22,7 +24,6 @@ $appointments = $conn->query("SELECT a.*, d.name as doctor_name
     JOIN doctors d ON a.doctor_id = d.id 
     WHERE a.user_id = $user_id 
     ORDER BY a.created_at DESC");
-
 ?>
 <!DOCTYPE html>
 <html lang="gu">
@@ -92,7 +93,7 @@ $appointments = $conn->query("SELECT a.*, d.name as doctor_name
             <?php endwhile; ?>
             
             <?php if($appointments->num_rows === 0): ?>
-                <p style="text-align:center; color: white; font-size: 1.2rem;">તમારી પાસે હજી કોઈ મેસેજ નથી.</p>
+                <p style="text-align:center; color: white; font-size: 1.2rem; background: var(--card-bg); padding: 30px; border-radius: 12px;">તમારી પાસે હજી કોઈ મેસેજ નથી.</p>
             <?php endif; ?>
         </div>
     </main>
