@@ -124,9 +124,9 @@
                 <i class="fa-solid fa-user-doctor"></i>
                 <span>ડોક્ટરોની યાદી</span>
             </a>
-            <a href="medicines.php" class-="grid-item" style="background:var(--card-bg);backdrop-filter:blur(8px);border-radius:12px;text-decoration:none;color:var(--primary-text);box-shadow:0 8px 25px rgba(0,0,0,0.15);transition:transform .3s ease,box-shadow .3s ease;overflow:hidden;border:1px solid rgba(255,255,255,.4);display:flex;flex-direction:column;padding:25px;align-items:center;text-align:center">
-                <i class="fa-solid fa-capsules"></i>
-                <span>દવાઓની માહિતી</span>
+            
+            <a href="medicines.php" class="grid-item">
+                <i class="fa-solid fa-tablets"></i> <span>દવાઓની માહિતી</span>
             </a>
             <a href="medical_stores.php" class="grid-item">
                 <i class="fa-solid fa-pills"></i>
