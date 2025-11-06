@@ -81,7 +81,7 @@ $issues = $conn->query("SELECT * FROM electricity_issues ORDER BY id");
     </main>
     <footer class="footer">
         © ૨૦૨૫ માય ડિજી ગામ | All Rights Reserved.<br>
-        Developed by <strong>[Your Name Here]</strong>
+        Developed by <strong>Hardik , Dhiraj , Nihar</strong>
     </footer>
     <script>
         document.getElementById('searchInput').addEventListener('keyup', function() {

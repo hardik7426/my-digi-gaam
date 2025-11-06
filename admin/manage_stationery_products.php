@@ -161,7 +161,7 @@ $products = $conn->query("SELECT p.*, c.name as category_name FROM stationery_pr
     </main>
     <footer class="footer">
         © ૨૦૨૫ માય ડિજી ગામ | All Rights Reserved.<br>
-        Developed by <strong>[Your Name Here]</strong>
+        Developed by <strong>Hardik , Dhiraj , Nihar</strong>
     </footer>
 </body>
 </html>

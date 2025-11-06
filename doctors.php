@@ -165,7 +165,7 @@ $doctors = $conn->query("SELECT * FROM doctors ORDER BY name");
     </main>
     <footer class="footer">
         © ૨૦૨૫ માય ડિજી ગામ | All Rights Reserved.<br>
-        Developed by <strong>[Your Name Here]</strong>
+        Developed by <strong>Hardik , Dhiraj , Nihar</strong>
     </footer>
 </body>
 </html>

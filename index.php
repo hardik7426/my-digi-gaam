@@ -294,7 +294,7 @@ $random_quote = $quotes[array_rand($quotes)]; // Select a random quote
 
     <footer class="footer">
         © ૨૦૨૫ માય ડિજી ગામ | All Rights Reserved.<br>
-        Developed by <strong>[Your Name Here]</strong>
+        Developed by <strong>Hardik , Dhiraj , Nihar</strong>
     </footer>
 
     <script>

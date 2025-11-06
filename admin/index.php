@@ -353,7 +353,7 @@ $grants_count = $conn->query("SELECT COUNT(*) as count FROM grants")->fetch_asso
     </main>
     <footer class="footer">
         © ૨૦૨૫ માય ડિજી ગામ | All Rights Reserved.<br>
-        Developed by <strong>[Your Name Here]</strong>
+        Developed by <strong>Hardik , Dhiraj , Nihar</strong>
     </footer>
 
     <script>
