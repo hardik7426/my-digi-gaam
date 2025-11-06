@@ -10,6 +10,8 @@ $complaints_count = $conn->query("SELECT COUNT(*) as count FROM complaints")->fe
 $contacts_count = $conn->query("SELECT COUNT(*) as count FROM contacts")->fetch_assoc()['count'];
 $news_count = $conn->query("SELECT COUNT(*) as count FROM news")->fetch_assoc()['count'];
 $grants_count = $conn->query("SELECT COUNT(*) as count FROM grants")->fetch_assoc()['count'];
+// *** NEW: Get order count ***
+$orders_count = $conn->query("SELECT COUNT(*) as count FROM stationery_orders WHERE order_status = 'In Cart'")->fetch_assoc()['count'];
 ?>
 <!DOCTYPE html>
 <html lang="gu">
@@ -158,6 +160,12 @@ $grants_count = $conn->query("SELECT COUNT(*) as count FROM grants")->fetch_asso
         .stat-card:nth-child(4) .icon-wrapper {
             background: var(--accent-color-4);
         }
+        
+        /* New Stat Card Color */
+        .stat-card:nth-child(5) .icon-wrapper {
+            background: #c53030; /* Red for orders */
+        }
+
 
         .stat-info .stat-number {
             font-size: 2.2rem;
@@ -281,6 +289,13 @@ $grants_count = $conn->query("SELECT COUNT(*) as count FROM grants")->fetch_asso
                     <div class="stat-label">કુલ ગ્રાન્ટ્સ</div>
                 </div>
             </div>
+             <div class="stat-card">
+                <div class="icon-wrapper"><i class="fa-solid fa-shopping-cart"></i></div>
+                <div class="stat-info">
+                    <div class="stat-number"><?php echo $orders_count; ?></div>
+                    <div class="stat-label">નવા ઓર્ડર (કાર્ટમાં)</div>
+                </div>
+            </div>
         </div>
 
         <h2 class="section-title">મેનેજમેન્ટ વિભાગ</h2>
@@ -321,8 +336,8 @@ $grants_count = $conn->query("SELECT COUNT(*) as count FROM grants")->fetch_asso
                 <i class="fa-solid fa-file-alt"></i>
                 <span>દસ્તાવેજ મેનેજ કરો</span>
             </a>
-            <a href="manage_stationery_stores.php.php" class="grid-item">
-                <i class="fa-solid fa-tags"></i>
+            <a href="manage_stationery_stores.php" class="grid-item">
+                <i class="fa-solid fa-store"></i>
                 <span>સ્ટેશનરી સ્ટોર મેનેજ કરો </span>
             </a>
             <a href="manage_stationery_categories.php" class="grid-item">
@@ -333,6 +348,12 @@ $grants_count = $conn->query("SELECT COUNT(*) as count FROM grants")->fetch_asso
                 <i class="fa-solid fa-pencil-ruler"></i>
                 <span>સ્ટેશનરી પ્રોડક્ટ્સ</span>
             </a>
+            
+            <a href="manage_stationery_orders.php" class="grid-item">
+                <i class="fa-solid fa-dolly"></i>
+                <span>સ્ટેશનરી ઓર્ડર</span>
+            </a>
+            
             <a href="manage_doctors.php" class="grid-item">
                 <i class="fa-solid fa-user-doctor"></i>
                 <span>ડોક્ટર મેનેજ કરો</span>

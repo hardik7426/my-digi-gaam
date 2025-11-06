@@ -14,6 +14,16 @@ $quotes = [
     "શરૂ કરવાનો રસ્તો એ છે કે વાત કરવાનું બંધ કરો અને કામ કરવાનું શરૂ કરો."
 ];
 $random_quote = $quotes[array_rand($quotes)]; // Select a random quote
+
+// *** નવો કોડ: કાર્ટમાં આઇટમની ગણતરી કરો ***
+$cart_count = 0;
+if (isset($_SESSION['user_id'])) {
+    $user_id = (int)$_SESSION['user_id'];
+    $result = $conn->query("SELECT COUNT(*) as count FROM stationery_orders WHERE user_id = $user_id AND order_status = 'In Cart'");
+    if ($result) {
+        $cart_count = $result->fetch_assoc()['count'];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="gu">
@@ -218,6 +228,18 @@ $random_quote = $quotes[array_rand($quotes)]; // Select a random quote
             top: -10px;
             right: -15px;
         }
+        
+        /* *** ગ્રીડ આઇટમ પર નોટિફિકેશન ડોટ માટે નવી CSS *** */
+        .grid-item .notification-dot {
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            font-size: 0.9rem;
+            top: 10px;
+            right: 15px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+
     </style>
 </head>
 
@@ -285,6 +307,15 @@ $random_quote = $quotes[array_rand($quotes)]; // Select a random quote
                 <i class="fa-solid fa-store"></i>
                 <span>ઓનલાઈન સ્ટેશનરી</span>
             </a>
+            
+            <a href="view_cart.php" class="grid-item">
+                <i class="fa-solid fa-shopping-cart"></i>
+                <span>મારો કાર્ટ</span>
+                <?php if ($cart_count > 0): ?>
+                    <span class="notification-dot"><?php echo $cart_count; ?></span>
+                <?php endif; ?>
+            </a>
+            
             <a href="hospital.php" class="grid-item">
                 <i class="fa-solid fa-hospital"></i>
                 <span>હોસ્પિટલ</span>

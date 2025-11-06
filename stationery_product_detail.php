@@ -46,9 +46,27 @@ if (!$product) {
         .product-details h2 { font-size: 2.2rem; font-weight: 700; margin-bottom: 15px; }
         .price { font-size: 2.5rem; font-weight: 700; color: var(--accent-color-2); margin-bottom: 20px; }
         .description { font-size: 1rem; line-height: 1.8; color: var(--secondary-text); border-top: 1px solid rgba(0,0,0,0.1); padding-top: 20px; }
-        .buy-btn { width: 100%; padding: 15px; margin-top: 30px; background: linear-gradient(135deg, var(--accent-color-1), var(--accent-color-2)); color: white; border: none; border-radius: 8px; font-size: 1.2rem; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.3s; }
+        
+        /* === CHANGED BUTTON TO A LINK === */
+        .buy-btn { 
+            display: inline-block;
+            text-align: center;
+            width: 100%; 
+            padding: 15px; 
+            margin-top: 30px; 
+            background: linear-gradient(135deg, var(--accent-color-1), var(--accent-color-2)); 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 1.2rem; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: transform 0.2s, box-shadow 0.3s;
+            text-decoration: none; /* Added */
+        }
         .buy-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.2); }
         .buy-btn i { margin-right: 10px; }
+        
         .footer { background-color: #2d3748; color: #a0aec0; text-align: center; padding: 20px 0; margin-top: auto; font-size: 0.9rem; }
         .footer strong { color: #ffffff; }
         @media (max-width: 768px) { .product-detail-layout { grid-template-columns: 1fr; } }
@@ -70,7 +88,11 @@ if (!$product) {
                     <h2><?php echo htmlspecialchars($product['name']); ?></h2>
                     <div class="price">₹<?php echo htmlspecialchars($product['price']); ?></div>
                     <p class="description"><?php echo nl2br(htmlspecialchars($product['description'])); ?></p>
-                    <button class="buy-btn"><i class="fa-solid fa-shopping-cart"></i> હમણાં ખરીદો</button>
+                    
+                    <a href="add_to_cart.php?id=<?php echo $product['id']; ?>" class="buy-btn">
+                        <i class="fa-solid fa-shopping-cart"></i> કાર્ટમાં ઉમેરો
+                    </a>
+                    
                 </div>
             </div>
         </div>
