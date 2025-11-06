@@ -238,7 +238,7 @@ $random_quote = $quotes[array_rand($quotes)]; // Select a random quote
 
     <main>
         <div class="hero-section">
-            <h2>ખોરાસા (ગીર) માં આપનું સ્વાગત છે</h2>
+            <h2> માંડલ ગામ માં આપનું હાર્દિક સ્વાગત છે</h2>
             <div id="liveClock" class="live-clock"></div>
             <p class="quote-of-the-day">"<?php echo $random_quote; ?>"</p>
         </div>
