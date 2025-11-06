@@ -321,6 +321,10 @@ $grants_count = $conn->query("SELECT COUNT(*) as count FROM grants")->fetch_asso
                 <i class="fa-solid fa-file-alt"></i>
                 <span>દસ્તાવેજ મેનેજ કરો</span>
             </a>
+            <a href="manage_stationery_stores.php.php" class="grid-item">
+                <i class="fa-solid fa-tags"></i>
+                <span>સ્ટેશનરી સ્ટોર મેનેજ કરો </span>
+            </a>
             <a href="manage_stationery_categories.php" class="grid-item">
                 <i class="fa-solid fa-tags"></i>
                 <span>સ્ટેશનરી કેટેગરી</span>

@@ -5,14 +5,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 }
 
 $message = '';
-// Get all stores for the dropdown
-$stores = $conn->query("SELECT * FROM stationery_stores ORDER BY name");
-
 // Add/Update Logic
 if (isset($_POST['save'])) {
     $id = $_POST['id'];
     $name = $_POST['name'];
-    $stationery_store_id = $_POST['stationery_store_id']; // New field
     $image_name = $_POST['existing_image'];
 
     if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
@@ -29,65 +25,74 @@ if (isset($_POST['save'])) {
     }
 
     if (empty($id)) {
-        $stmt = $conn->prepare("INSERT INTO stationery_categories (stationery_store_id, name, image) VALUES (?, ?, ?)");
-        $stmt->bind_param("iss", $stationery_store_id, $name, $image_name);
-        if ($stmt->execute()) $message = "નવી કેટેગરી ઉમેરાઈ.";
+        $stmt = $conn->prepare("INSERT INTO stationery_stores (name, image) VALUES (?, ?)");
+        $stmt->bind_param("ss", $name, $image_name);
+        if ($stmt->execute()) $message = "નવો સ્ટેશનરી સ્ટોર ઉમેરાયો.";
     } else {
-        $stmt = $conn->prepare("UPDATE stationery_categories SET stationery_store_id=?, name=?, image=? WHERE id=?");
-        $stmt->bind_param("issi", $stationery_store_id, $name, $image_name, $id);
-        if ($stmt->execute()) $message = "કેટેગરી અપડેટ થઈ.";
+        $stmt = $conn->prepare("UPDATE stationery_stores SET name=?, image=? WHERE id=?");
+        $stmt->bind_param("ssi", $name, $image_name, $id);
+        if ($stmt->execute()) $message = "સ્ટેશનરી સ્ટોર અપડેટ થયો.";
     }
     $stmt->close();
 }
-
 // Delete Logic
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
     
-    // Find category image
-    $result = $conn->query("SELECT image FROM stationery_categories WHERE id = $id");
-    if ($row = $result->fetch_assoc()) {
-        if (!empty($row['image']) && file_exists('../uploads/stationery/' . $row['image'])) {
-            unlink('../uploads/stationery/' . $row['image']);
+    // First, find the store image to delete it
+    $result_store = $conn->query("SELECT image FROM stationery_stores WHERE id = $id");
+    if ($row_store = $result_store->fetch_assoc()) {
+        if (!empty($row_store['image']) && file_exists('../uploads/stationery/' . $row_store['image'])) {
+            unlink('../uploads/stationery/' . $row_store['image']);
         }
     }
-    
-    // Find and delete all product images for this category
-    $result_prods = $conn->query("SELECT id, image FROM stationery_products WHERE category_id = $id");
-    while ($prod = $result_prods->fetch_assoc()) {
-        if (!empty($prod['image']) && file_exists('../uploads/stationery/' . $prod['image'])) {
-            unlink('../uploads/stationery/' . $prod['image']);
-        }
-    }
-    
-    // Delete products from this category (optional, if DB doesn't cascade)
-    $stmt_prods = $conn->prepare("DELETE FROM stationery_products WHERE category_id = ?");
-    $stmt_prods->bind_param("i", $id);
-    $stmt_prods->execute();
-    $stmt_prods->close();
 
-    // Delete the category
-    $stmt = $conn->prepare("DELETE FROM stationery_categories WHERE id = ?");
+    // !! IMPORTANT: Because of 'ON DELETE CASCADE' set in the database,
+    // deleting a store will automatically delete all its categories
+    // and all products within those categories.
+    // We still need to manually delete the images for those products and categories.
+
+    // Find all categories for this store
+    $result_cats = $conn->query("SELECT id, image FROM stationery_categories WHERE stationery_store_id = $id");
+    while ($cat = $result_cats->fetch_assoc()) {
+        // Delete category image
+        if (!empty($cat['image']) && file_exists('../uploads/stationery/' . $cat['image'])) {
+            unlink('../uploads/stationery/' . $cat['image']);
+        }
+        
+        // Find all products for this category
+        $result_prods = $conn->query("SELECT id, image FROM stationery_products WHERE category_id = " . $cat['id']);
+        while ($prod = $result_prods->fetch_assoc()) {
+            // Delete product image
+            if (!empty($prod['image']) && file_exists('../uploads/stationery/' . $prod['image'])) {
+                unlink('../uploads/stationery/' . $prod['image']);
+            }
+        }
+    }
+    
+    // Now, delete the store (categories and products will cascade delete)
+    $stmt = $conn->prepare("DELETE FROM stationery_stores WHERE id = ?");
     $stmt->bind_param("i", $id);
-    if ($stmt->execute()) $message = "કેટેગરી અને તેની બધી પ્રોડક્ટ્સ દૂર કરાઈ.";
+    if ($stmt->execute()) {
+        $message = "સ્ટેશનરી સ્ટોર અને તેની બધી કેટેગરી/પ્રોડક્ટ્સ દૂર કરાઈ.";
+    }
     $stmt->close();
 }
 
-$edit_cat = ['id' => '', 'name' => '', 'image' => '', 'stationery_store_id' => ''];
+$edit_store = ['id' => '', 'name' => '', 'image' => ''];
 if (isset($_GET['edit'])) {
     $id = $_GET['edit'];
-    $result = $conn->query("SELECT * FROM stationery_categories WHERE id = $id");
-    $edit_cat = $result->fetch_assoc();
+    $result = $conn->query("SELECT * FROM stationery_stores WHERE id = $id");
+    $edit_store = $result->fetch_assoc();
 }
-// Updated query to show store name
-$categories = $conn->query("SELECT c.*, s.name as store_name FROM stationery_categories c JOIN stationery_stores s ON c.stationery_store_id = s.id ORDER BY s.name, c.name");
+$stores = $conn->query("SELECT * FROM stationery_stores ORDER BY name");
 ?>
 <!DOCTYPE html>
 <html lang="gu">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>સ્ટેશનરી કેટેગરી મેનેજ કરો</title>
+    <title>સ્ટેશનરી સ્ટોર મેનેજ કરો</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;500;700&display=swap" rel="stylesheet">
@@ -105,7 +110,7 @@ $categories = $conn->query("SELECT c.*, s.name as store_name FROM stationery_cat
         .form-section, .table-section { background: var(--card-bg); backdrop-filter: blur(10px); border-radius: 12px; padding: 30px 40px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); border: 1px solid rgba(255, 255, 255, 0.5); margin-bottom: 30px; }
         .form-section h3, .table-section h3 { margin-bottom: 20px; font-size: 1.4rem; }
         .form-section label { display: block; font-weight: 500; margin-bottom: 8px; color: var(--secondary-text); }
-        input[type="text"], input[type="file"], select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 1rem; background-color: rgba(255,255,255,0.5); font-family: 'Noto Sans Gujarati', sans-serif; }
+        input[type="text"], input[type="file"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 1rem; background-color: rgba(255,255,255,0.5); }
         button { padding: 12px 30px; background-color: var(--accent-color-1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 15px; border-bottom: 1px solid rgba(0,0,0,0.05); text-align: left; }
@@ -118,32 +123,21 @@ $categories = $conn->query("SELECT c.*, s.name as store_name FROM stationery_cat
 </head>
 <body>
     <header class="main-header">
-        <h1><i class="fa-solid fa-tags"></i> સ્ટેશનરી કેટેગરી મેનેજ કરો</h1>
+        <h1><i class="fa-solid fa-store"></i> સ્ટેશનરી સ્ટોર મેનેજ કરો</h1>
         <a href="index.php" class="back-link"><i class="fa-solid fa-arrow-left"></i> એડમિન ડેશબોર્ડ</a>
     </header>
     <main>
         <div class="admin-container">
             <div class="form-section">
-                <h3><?php echo empty($edit_cat['id']) ? 'નવી કેટેગરી ઉમેરો' : 'કેટેગરી એડિટ કરો'; ?></h3>
-                <form action="manage_stationery_categories.php" method="post" enctype="multipart/form-data">
-                    <input type="hidden" name="id" value="<?php echo htmlspecialchars($edit_cat['id']); ?>">
-                    <input type="hidden" name="existing_image" value="<?php echo htmlspecialchars($edit_cat['image']); ?>">
+                <h3><?php echo empty($edit_store['id']) ? 'નવો સ્ટોર ઉમેરો' : 'સ્ટોર એડિટ કરો'; ?></h3>
+                <form action="manage_stationery_stores.php" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="id" value="<?php echo htmlspecialchars($edit_store['id']); ?>">
+                    <input type="hidden" name="existing_image" value="<?php echo htmlspecialchars($edit_store['image']); ?>">
                     
-                    <label for="stationery_store_id">સ્ટેશનરી સ્ટોર</label>
-                    <select id="stationery_store_id" name="stationery_store_id" required>
-                        <option value="">-- સ્ટોર પસંદ કરો --</option>
-                        <?php mysqli_data_seek($stores, 0); ?>
-                        <?php while($store = $stores->fetch_assoc()): ?>
-                            <option value="<?php echo $store['id']; ?>" <?php if($edit_cat['stationery_store_id'] == $store['id']) echo 'selected'; ?>>
-                                <?php echo htmlspecialchars($store['name']); ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-
-                    <label for="name">કેટેગરીનું નામ</label>
-                    <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($edit_cat['name']); ?>" required>
+                    <label for="name">સ્ટોરનું નામ</label>
+                    <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($edit_store['name']); ?>" required>
                     
-                    <label for="image">કેટેગરીનો ફોટો</label>
+                    <label for="image">સ્ટોરનો ફોટો</label>
                     <input type="file" id="image" name="image" accept="image/*">
                     
                     <button type="submit" name="save">સેવ કરો</button>
@@ -152,17 +146,16 @@ $categories = $conn->query("SELECT c.*, s.name as store_name FROM stationery_cat
             </div>
 
             <div class="table-section">
-                <h3>બધી કેટેગરી</h3>
+                <h3>બધા સ્ટેશનરી સ્ટોર</h3>
                 <table>
-                    <thead><tr><th>સ્ટોરનું નામ</th><th>કેટેગરીનું નામ</th><th>ક્રિયાઓ</th></tr></thead>
+                    <thead><tr><th>નામ</th><th>ક્રિયાઓ</th></tr></thead>
                     <tbody>
-                        <?php while($row = $categories->fetch_assoc()): ?>
+                        <?php while($row = $stores->fetch_assoc()): ?>
                         <tr>
-                            <td><?php echo htmlspecialchars($row['store_name']); ?></td>
                             <td><?php echo htmlspecialchars($row['name']); ?></td>
                             <td>
-                                <a href="manage_stationery_categories.php?edit=<?php echo $row['id']; ?>">એડિટ</a> |
-                                <a href="manage_stationery_categories.php?delete=<?php echo $row['id']; ?>" class="delete-action" onclick="return confirm('આ કેટેગરી ડિલીટ કરવાથી તેની બધી પ્રોડક્ટ્સ પણ ડિલીટ થઈ જશે. શું તમે ચોક્કસ છો?');">ડિલીટ</a>
+                                <a href="manage_stationery_stores.php?edit=<?php echo $row['id']; ?>">એડિટ</a> |
+                                <a href="manage_stationery_stores.php?delete=<?php echo $row['id']; ?>" class="delete-action" onclick="return confirm('આ સ્ટોર ડિલીટ કરવાથી તેની બધી કેટેગરી અને પ્રોડક્ટ્સ પણ ડિલીટ થઈ જશે. શું તમે ચોક્કસ છો?');">ડિલીટ</a>
                             </td>
                         </tr>
                         <?php endwhile; ?>

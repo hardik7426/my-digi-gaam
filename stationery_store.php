@@ -4,7 +4,8 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit();
 }
-$categories = $conn->query("SELECT * FROM stationery_categories ORDER BY name");
+// Query for STORES now, not categories
+$stores = $conn->query("SELECT * FROM stationery_stores ORDER BY name");
 ?>
 <!DOCTYPE html>
 <html lang="gu">
@@ -45,7 +46,6 @@ $categories = $conn->query("SELECT * FROM stationery_categories ORDER BY name");
         .main-header i { margin-right: 12px; }
         .main-header a.back-link { color: var(--secondary-text); text-decoration: none; font-weight: 500; }
         
-        /* NEW Hero Section for Search */
         .hero-section {
             padding: 50px 20px;
             text-align: center;
@@ -82,10 +82,9 @@ $categories = $conn->query("SELECT * FROM stationery_categories ORDER BY name");
         }
 
         .content-container { max-width: 1200px; margin: 20px auto; padding: 0 20px; width: 100%; }
-        .category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 30px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 30px; }
 
-        /* NEW Attractive Category Card */
-        .category-card {
+        .card {
             background: var(--card-bg);
             backdrop-filter: blur(8px);
             border-radius: 12px;
@@ -98,14 +97,14 @@ $categories = $conn->query("SELECT * FROM stationery_categories ORDER BY name");
             display: flex;
             flex-direction: column;
         }
-        .category-card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2); }
-        .category-card img {
+        .card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2); }
+        .card img {
             width: 100%;
             height: 180px;
             object-fit: cover;
             transition: transform 0.3s ease;
         }
-        .category-card:hover img {
+        .card:hover img {
             transform: scale(1.05);
         }
         .card-content {
@@ -119,7 +118,7 @@ $categories = $conn->query("SELECT * FROM stationery_categories ORDER BY name");
         }
         .card-content h3 { font-size: 1.3rem; font-weight: 600; margin: 0; }
         .card-content i { font-size: 1rem; color: var(--accent-color-1); transition: transform 0.3s ease; }
-        .category-card:hover i { transform: translateX(5px); }
+        .card:hover i { transform: translateX(5px); }
         
         .footer { background-color: #2d3748; color: #a0aec0; text-align: center; padding: 20px 0; margin-top: auto; font-size: 0.9rem; }
         .footer strong { color: #ffffff; }
@@ -132,20 +131,20 @@ $categories = $conn->query("SELECT * FROM stationery_categories ORDER BY name");
     </header>
     <main>
         <div class="hero-section">
-            <h2>તમને શું જોઈએ છે?</h2>
+            <h2>તમારા નજીકના સ્ટેશનરી સ્ટોરને શોધો</h2>
             <div class="search-container">
                 <i class="fa-solid fa-search"></i>
-                <input type="text" id="searchInput" placeholder="કેટેગરી શોધો (દા.ત. પેન્સિલ, પુસ્તકો)...">
+                <input type="text" id="searchInput" placeholder="સ્ટેશનરી સ્ટોર શોધો...">
             </div>
         </div>
 
         <div class="content-container">
-            <div class="category-grid">
-                <?php while($category = $categories->fetch_assoc()): ?>
-                <a href="stationery_products.php?category_id=<?php echo $category['id']; ?>" class="category-card">
-                    <img src="uploads/stationery/<?php echo htmlspecialchars($category['image'] ?? 'default.jpg'); ?>" alt="<?php echo htmlspecialchars($category['name']); ?>" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x200?text=No+Image';">
+            <div class="grid">
+                <?php while($store = $stores->fetch_assoc()): ?>
+                <a href="stationery_categories_list.php?store_id=<?php echo $store['id']; ?>" class="card">
+                    <img src="uploads/stationery/<?php echo htmlspecialchars($store['image'] ?? 'default.jpg'); ?>" alt="<?php echo htmlspecialchars($store['name']); ?>" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x200?text=No+Image';">
                     <div class="card-content">
-                        <h3><?php echo htmlspecialchars($category['name']); ?></h3>
+                        <h3><?php echo htmlspecialchars($store['name']); ?></h3>
                         <i class="fa-solid fa-arrow-right"></i>
                     </div>
                 </a>
@@ -159,14 +158,12 @@ $categories = $conn->query("SELECT * FROM stationery_categories ORDER BY name");
     </footer>
 
     <script>
-        // Live search functionality
         document.getElementById('searchInput').addEventListener('keyup', function() {
             let searchTerm = this.value.toLowerCase();
-            let categoryCards = document.querySelectorAll('.category-card');
-
-            categoryCards.forEach(card => {
-                let categoryName = card.querySelector('h3').textContent.toLowerCase();
-                if (categoryName.includes(searchTerm)) {
+            let cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                let cardName = card.querySelector('h3').textContent.toLowerCase();
+                if (cardName.includes(searchTerm)) {
                     card.style.display = 'block';
                 } else {
                     card.style.display = 'none';

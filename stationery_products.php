@@ -10,13 +10,19 @@ if (!isset($_GET['category_id']) || !is_numeric($_GET['category_id'])) {
 }
 $category_id = (int)$_GET['category_id'];
 
-// Get category name securely
-$stmt_cat = $conn->prepare("SELECT name FROM stationery_categories WHERE id = ?");
+// Get category name AND store_id securely
+$stmt_cat = $conn->prepare("SELECT name, stationery_store_id FROM stationery_categories WHERE id = ?");
 $stmt_cat->bind_param("i", $category_id);
 $stmt_cat->execute();
 $category_result = $stmt_cat->get_result();
 $category = $category_result->fetch_assoc();
-$category_name = $category ? $category['name'] : 'અજાણી કેટેગરી';
+
+if (!$category) {
+    header('Location: stationery_store.php');
+    exit();
+}
+$category_name = $category['name'];
+$store_id = $category['stationery_store_id']; // Get the store_id for the back link
 
 // Get all products for this category securely
 $stmt_prod = $conn->prepare("SELECT * FROM stationery_products WHERE category_id = ? ORDER BY name");
@@ -83,7 +89,9 @@ $products = $stmt_prod->get_result();
 <body>
     <header class="main-header">
         <h1><i class="fa-solid fa-shapes"></i> <?php echo htmlspecialchars($category_name); ?></h1>
-        <a href="stationery_store.php" class="back-link"><i class="fa-solid fa-arrow-left"></i> બધી કેટેગરી પર પાછા જાઓ</a>
+        <a href="stationery_categories_list.php?store_id=<?php echo $store_id; ?>" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i> બધી કેટેગરી પર પાછા જાઓ
+        </a>
     </header>
     <main>
         <div class="content-container">
@@ -135,13 +143,11 @@ $products = $stmt_prod->get_result();
                 const searchTerm = searchInput.value.toLowerCase();
                 const sortOrder = priceFilter.value;
 
-                // First, filter based on search term
                 const filteredCards = productCards.filter(card => {
                     const name = card.dataset.name;
                     return name.includes(searchTerm);
                 });
 
-                // Then, sort the filtered cards
                 filteredCards.sort((a, b) => {
                     const priceA = parseFloat(a.dataset.price);
                     const priceB = parseFloat(b.dataset.price);
@@ -153,10 +159,8 @@ $products = $stmt_prod->get_result();
                     return 0; // 'default' order
                 });
                 
-                // Hide all cards first
                 productCards.forEach(card => card.style.display = 'none');
                 
-                // Append the sorted and filtered cards back to the grid
                 filteredCards.forEach(card => {
                     card.style.display = 'flex';
                     productGrid.appendChild(card);

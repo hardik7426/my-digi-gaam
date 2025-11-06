@@ -5,7 +5,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 }
 
 $message = '';
-$categories = $conn->query("SELECT * FROM stationery_categories ORDER BY name");
+// Updated query to get categories with store names
+$categories = $conn->query("SELECT c.id, c.name, s.name as store_name FROM stationery_categories c JOIN stationery_stores s ON c.stationery_store_id = s.id ORDER BY s.name, c.name");
 
 // Add/Update Logic
 if (isset($_POST['save'])) {
@@ -109,12 +110,14 @@ $products = $conn->query("SELECT p.*, c.name as category_name FROM stationery_pr
                     <input type="hidden" name="id" value="<?php echo htmlspecialchars($edit_product['id']); ?>">
                     <input type="hidden" name="existing_image" value="<?php echo htmlspecialchars($edit_product['image']); ?>">
                     
-                    <label for="category_id">કેટેગરી</label>
+                    <label for="category_id">કેટેગરી (સ્ટોર)</label>
                     <select id="category_id" name="category_id" required>
                         <option value="">-- કેટેગરી પસંદ કરો --</option>
                         <?php mysqli_data_seek($categories, 0); ?>
                         <?php while($cat = $categories->fetch_assoc()): ?>
-                            <option value="<?php echo $cat['id']; ?>" <?php if($edit_product['category_id'] == $cat['id']) echo 'selected'; ?>><?php echo htmlspecialchars($cat['name']); ?></option>
+                            <option value="<?php echo $cat['id']; ?>" <?php if($edit_product['category_id'] == $cat['id']) echo 'selected'; ?>>
+                                <?php echo htmlspecialchars($cat['store_name'] . ' - ' . $cat['name']); // Show Store Name ?>
+                            </option>
                         <?php endwhile; ?>
                     </select>
 
