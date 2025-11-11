@@ -29,6 +29,8 @@ $total_price = 0;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- Razorpay checkout script -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
         :root { --header-bg: #ffffff; --card-bg: rgba(255, 255, 255, 0.92); --primary-text: #1a202c; --secondary-text: #718096; --accent-color-1: #3182ce; --accent-color-2: #38b2ac; --danger-color: #e53e3e; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -47,6 +49,7 @@ $total_price = 0;
         .cart-item-remove { color: var(--danger-color); text-decoration: none; font-size: 1.2rem; }
         .cart-total { background: var(--card-bg); backdrop-filter: blur(8px); border-radius: 12px; padding: 30px; margin-top: 30px; text-align: right; }
         .cart-total h2 { font-size: 1.8rem; margin-bottom: 10px; }
+        .checkout-btn { background: var(--accent-color-1); color: #fff; padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 1rem; }
         .no-items { text-align: center; color: white; font-size: 1.2rem; }
         .footer { background-color: #2d3748; color: #a0aec0; text-align: center; padding: 20px 0; margin-top: auto; font-size: 0.9rem; }
         .footer strong { color: #ffffff; }
@@ -76,6 +79,7 @@ $total_price = 0;
                 
                 <div class="cart-total">
                     <h2>કુલ કિંમત: ₹<?php echo $total_price; ?></h2>
+                    <button id="checkoutButton" class="checkout-btn">Checkout with Razorpay</button>
                 </div>
             <?php else: ?>
                 <p class="no-items">તમારો કાર્ટ ખાલી છે.</p>
@@ -86,5 +90,68 @@ $total_price = 0;
         © ૨૦૨૫ માય ડિજી ગામ | All Rights Reserved.<br>
         Developed by <strong>Hardik , Dhiraj , Nihar</strong>
     </footer>
+
+    <script>
+    document.getElementById('checkoutButton')?.addEventListener('click', function() {
+        // send request to create_order.php to create Razorpay Order server-side
+        fetch('create_order.php', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ action: 'create', /* optional: additional */ })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) {
+                alert('એરર: ' + data.error);
+                return;
+            }
+            // options for Razorpay checkout
+            const options = {
+                "key": data.key_id, // provided by server
+                "amount": data.amount, // in paise
+                "currency": data.currency,
+                "name": "માય ડિજી ગામ - સ્ટેશનરી",
+                "description": "Stationery Purchase",
+                "order_id": data.razorpay_order_id,
+                "handler": function (response){
+                    // send response to server for verification
+                    fetch('verify_payment.php', {
+                        method: 'POST',
+                        headers: {'Content-Type':'application/json'},
+                        body: JSON.stringify({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature
+                        })
+                    })
+                    .then(r => r.json())
+                    .then(result => {
+                        if (result.success) {
+                            alert('Payment Successful! תודה.'); // small mix: can replace with Gujarati phrase if you prefer
+                            window.location.href = 'my_orders.php'; // redirect to orders page or refresh
+                        } else {
+                            alert('Payment verification failed: ' + (result.error || 'Unknown'));
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert('Server verification error.');
+                    });
+                },
+                "prefill": {
+                    "name": "<?php echo htmlspecialchars($_SESSION['username'] ?? ''); ?>",
+                    "email": "<?php echo htmlspecialchars($_SESSION['email'] ?? ''); ?>"
+                },
+                "theme": { "color": "#3182ce" }
+            };
+            const rzp = new Razorpay(options);
+            rzp.open();
+        })
+        .catch(err => {
+            console.error(err);
+            alert('એક એરર આવશે. ફરીથી પ્રયાસ કરો.');
+        });
+    });
+    </script>
 </body>
 </html>

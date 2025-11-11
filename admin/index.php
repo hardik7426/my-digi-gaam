@@ -49,7 +49,7 @@ $orders_count = $conn->query("SELECT COUNT(*) as count FROM stationery_orders WH
         body {
             font-family: 'Noto Sans Gujarati', sans-serif;
             color: var(--primary-text);
-            background-image: linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)), url('../assets/images/index.jpeg');
+            background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../assets/images/index.jpeg');
             background-attachment: fixed;
             min-height: 100vh;
             display: flex;
@@ -104,6 +104,9 @@ $orders_count = $conn->query("SELECT COUNT(*) as count FROM stationery_orders WH
             margin-bottom: 40px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             text-align: center;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
         }
 
         .welcome-header h2 {

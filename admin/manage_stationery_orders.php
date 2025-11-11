@@ -25,8 +25,7 @@ if (isset($_GET['delete'])) {
 }
 
 // Fetch all orders, joining with user and product tables
-// *** અહીં ફેરફાર કરેલ છે: u.name ને બદલે u.username ***
-$orders = $conn->query("SELECT o.id, o.order_status, o.created_at, u.username as user_name, p.name as product_name, p.price
+$orders = $conn->query("SELECT o.id, o.order_status, o.created_at, u.username as user_name, p.name as product_name, p.price, o.payment_status, o.payment_id, o.razorpay_order_id
                        FROM stationery_orders o
                        JOIN users u ON o.user_id = u.id
                        JOIN stationery_products p ON o.product_id = p.id
@@ -54,13 +53,15 @@ $orders = $conn->query("SELECT o.id, o.order_status, o.created_at, u.username as
         .admin-container { max-width: 1300px; margin: 40px auto; padding: 0 20px; width: 100%; }
         .table-section { background: var(--card-bg); backdrop-filter: blur(10px); border-radius: 12px; padding: 30px 40px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); border: 1px solid rgba(255, 255, 255, 0.5); margin-bottom: 30px; overflow-x: auto; }
         .table-section h3 { margin-bottom: 20px; font-size: 1.4rem; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th, td { padding: 15px; border-bottom: 1px solid rgba(0,0,0,0.05); text-align: left; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th, td { padding: 12px; border-bottom: 1px solid rgba(0,0,0,0.05); text-align: left; vertical-align: middle; }
         td a { color: var(--accent-color-1); font-weight: 500; text-decoration: none; }
         .action-delete { color: var(--danger-color); }
         .action-complete { color: var(--success-color); }
         .status-incart { color: #dd6b20; font-weight: 600; }
         .status-completed { color: var(--success-color); font-weight: 600; }
+        .payment-paid { color: var(--success-color); font-weight: 600; }
+        .payment-pending { color: #b76b00; font-weight: 600; }
         .message.success { color: #2f855a; background-color: #c6f6d5; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
         .footer { background-color: #2d3748; color: #a0aec0; text-align: center; padding: 20px 0; margin-top: auto; font-size: 0.9rem; }
         .footer strong { color: #ffffff; }
@@ -83,6 +84,8 @@ $orders = $conn->query("SELECT o.id, o.order_status, o.created_at, u.username as
                             <th>પ્રોડક્ટ</th>
                             <th>કિંમત</th>
                             <th>સ્ટેટસ</th>
+                            <th>ચુકવણી</th>
+                            <th>પેમેન્ટ ID</th>
                             <th>તારીખ</th>
                             <th>ક્રિયાઓ</th>
                         </tr>
@@ -100,6 +103,14 @@ $orders = $conn->query("SELECT o.id, o.order_status, o.created_at, u.username as
                                     <span class="status-completed">પૂર્ણ</span>
                                 <?php endif; ?>
                             </td>
+                            <td>
+                                <?php if($row['payment_status'] == 'Paid'): ?>
+                                    <span class="payment-paid">Paid</span>
+                                <?php else: ?>
+                                    <span class="payment-pending">Pending</span>
+                                <?php endif; ?>
+                            </td>
+                            <td><?php echo htmlspecialchars($row['payment_id'] ?? '-'); ?></td>
                             <td><?php echo date('d-m-Y H:i', strtotime($row['created_at'])); ?></td>
                             <td>
                                 <?php if($row['order_status'] == 'In Cart'): ?>
