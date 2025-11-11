@@ -4,8 +4,8 @@
 require 'db.php';
 header('Content-Type: application/json');
 
-define('RAZORPAY_KEY_ID', 'YOUR_RAZORPAY_KEY_ID');
-define('RAZORPAY_KEY_SECRET', 'YOUR_RAZORPAY_KEY_SECRET');
+define('RAZORPAY_KEY_ID', 'rzp_test_bOO7RkRAo6QmEo');
+define('RAZORPAY_KEY_SECRET', 'e8OQPew9CiwbUc96IGR75d1c');
 
 $input = json_decode(file_get_contents('php://input'), true);
 if (!$input) {

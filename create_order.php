@@ -4,8 +4,8 @@ require 'db.php';
 header('Content-Type: application/json');
 
 // Replace with your Razorpay credentials
-define('RAZORPAY_KEY_ID', 'YOUR_RAZORPAY_KEY_ID');
-define('RAZORPAY_KEY_SECRET', 'YOUR_RAZORPAY_KEY_SECRET');
+define('RAZORPAY_KEY_ID', 'rzp_test_bOO7RkRAo6QmEo');
+define('RAZORPAY_KEY_SECRET', 'e8OQPew9CiwbUc96IGR75d1c');
 
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['error' => 'Not authenticated']);

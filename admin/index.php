@@ -48,7 +48,7 @@ $orders_count = $conn->query("SELECT COUNT(*) as count FROM stationery_orders WH
 
         body {
             font-family: 'Noto Sans Gujarati', sans-serif;
-            color: var(--primary-text);
+            color: #fff;
             background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../assets/images/index.jpeg');
             background-attachment: fixed;
             min-height: 100vh;
@@ -130,7 +130,7 @@ $orders_count = $conn->query("SELECT COUNT(*) as count FROM stationery_orders WH
         }
 
         .stat-card {
-            background: var(--card-bg);
+            background: #fff;
             backdrop-filter: blur(10px);
             border-radius: 12px;
             padding: 25px;
@@ -188,6 +188,10 @@ $orders_count = $conn->query("SELECT COUNT(*) as count FROM stationery_orders WH
             padding-bottom: 10px;
             border-bottom: 3px solid var(--accent-color-1);
             display: inline-block;
+            color: white;
+             backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+
         }
 
         .dashboard-grid {
@@ -197,7 +201,7 @@ $orders_count = $conn->query("SELECT COUNT(*) as count FROM stationery_orders WH
         }
 
         .grid-item {
-            background: var(--card-bg);
+            background: #fff;;
             backdrop-filter: blur(10px);
             border-radius: 12px;
             text-decoration: none;
